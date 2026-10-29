@@ -28,6 +28,7 @@ if [ "$REPO_TEST_GHQ_FAIL" = 1 ]; then
   exit 7
 fi
 case "$1" in
+  get) shift; printf 'get %s\n' "$*" ;;
   root) printf '%s\n' "$REPO_TEST_ROOT" ;;
   list)
     if [ "$2" = -p ]; then
@@ -93,6 +94,13 @@ fn help_has_command_groups_and_usage_examples() {
     for text in ["Navigate:", "Shell:", "repo list vite", "repo init zsh"] {
         assert!(stdout(&output).contains(text));
     }
+}
+
+#[test]
+fn get_passes_arguments_to_ghq() {
+    let output = Fixture::new().run(&["get", "--shallow", "me/alpha"]);
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "get --shallow me/alpha\n");
 }
 
 #[test]

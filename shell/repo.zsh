@@ -7,7 +7,7 @@ repo() {
     esac
   done
   case "${1:-}" in
-    list|ls|root|init|completions|help) command repo "$@" ;;
+    list|ls|root|get|init|completions|help) command repo "$@" ;;
     *)
       local selected result
       selected=$(command repo "$@")

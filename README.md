@@ -9,6 +9,7 @@ repo vite                # Select from names that contain vite
 repo go lets-start-go    # Open a single match
 repo list vite           # Show matching names
 repo list --paths        # Print absolute paths
+repo get OWNER/REPO      # Clone a repository with ghq
 repo --help              # Show commands and examples
 ```
 

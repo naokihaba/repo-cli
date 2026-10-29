@@ -21,7 +21,7 @@ fn cli() -> Command {
         .styles(styles)
         .subcommand_precedence_over_arg(true)
         .arg(query())
-        .help_template("{about}\n\n{usage-heading} {usage}\n\nNavigate:\n  go, cd       Select a repository and change directory\n  list, ls     Show repository candidates\n  root         Show the ghq root directory\n\nShell:\n  init         Print shell integration\n  completions  Print shell completions\n\nArguments:\n{positionals}\nOptions:\n{options}\n\nExamples:\n  repo                 Select from all repositories\n  repo vite            Select from names that contain 'vite'\n  repo go lets-start-go Open a single match directly\n  repo list vite       Show matching candidates\n\nSetup:\n  eval \"$(repo init zsh)\"\n")
+        .help_template("{about}\n\n{usage-heading} {usage}\n\nNavigate:\n  go, cd       Select a repository and change directory\n  list, ls     Show repository candidates\n  root         Show the ghq root directory\n\nManage:\n  get          Clone a repository with ghq\n\nShell:\n  init         Print shell integration\n  completions  Print shell completions\n\nArguments:\n{positionals}\nOptions:\n{options}\n\nExamples:\n  repo                 Select from all repositories\n  repo vite            Select from names that contain 'vite'\n  repo go lets-start-go Open a single match directly\n  repo list vite       Show matching candidates\n  repo get OWNER/REPO  Clone a repository with ghq\n\nSetup:\n  eval \"$(repo init zsh)\"\n")
         .subcommand(Command::new("go").visible_alias("cd")
             .about("Select a repository; print its path for shell integration")
             .arg(query())
@@ -32,6 +32,10 @@ fn cli() -> Command {
             .arg(Arg::new("paths").short('p').long("paths")
                 .action(ArgAction::SetTrue).help("Print absolute paths")))
         .subcommand(Command::new("root").about("Show the ghq root directory"))
+        .subcommand(Command::new("get").about("Clone a repository with ghq")
+            .arg(Arg::new("args").value_name("ARGS").required(true)
+                .num_args(1..).trailing_var_arg(true).allow_hyphen_values(true)
+                .help("Repository URL or OWNER/REPO, with optional 'ghq get' options")))
         .subcommand(Command::new("init").about("Print shell integration")
             .arg(Arg::new("shell").required(true).value_parser(["zsh"])))
         .subcommand(Command::new("completions").about("Print shell completions")
@@ -176,6 +180,19 @@ fn run() -> Result<(), Failure> {
     let matches = cli().get_matches();
     match matches.subcommand() {
         Some(("root", _)) => print!("{}", ghq(&["root"])?),
+        Some(("get", args)) => {
+            let status = Process::new("ghq")
+                .arg("get")
+                .args(args.get_many::<String>("args").unwrap())
+                .status()
+                .map_err(|error| format!("Cannot run ghq: {error}"))?;
+            if !status.success() {
+                return Err(Failure {
+                    message: String::new(),
+                    code: status.code().map_or(1, |code| code as u8),
+                });
+            }
+        }
         Some(("init", _)) => {
             print!("{ZSH_INIT}");
             clap_complete::generate(
